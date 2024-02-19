@@ -1,0 +1,177 @@
+import java.util.Scanner;
+
+public class Main {
+    private static final Gradebook gradebook = new Gradebook();
+    private static final Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        gradebook.printWelcomeMessage();
+        getInput();
+        handleCommands();
+    }
+
+    private static void getInput() {
+        while (true) {
+            System.out.print("Enter student info or 'DONE': ");
+            String input = scanner.nextLine();
+            if ("DONE".equalsIgnoreCase(input)) {
+                break;
+            }
+            try {
+                processStudentInput(input);
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please try again.");
+            }
+        }
+    }
+
+    private static void processStudentInput(String input) {
+        String[] parts = input.split(" ");
+        if (parts.length != 4) {
+            System.out.println("Invalid input format. Please try again.");
+            return;
+        }
+        String firstName = parts[0];
+        String lastName = parts[1];
+        int PID = Integer.parseInt(parts[2]);
+        int grade = Integer.parseInt(parts[3]);
+        Student student = new Student(firstName, lastName, PID, grade);
+        gradebook.addStudent(student);
+        System.out.println("Student added successfully.");
+    }
+
+    private static void handleCommands() {
+        System.out.println("Please enter a new command:");
+        while (true) {
+            String command = scanner.nextLine();
+            if ("QUIT".equalsIgnoreCase(command)) {
+                System.out.println("Exiting grade book application.");
+                break;
+            }
+            processCommand(command);
+        }
+    }
+
+
+    private static void processCommand(String command) {
+        String[] commandParts = command.split(" ");
+        switch (commandParts[0].toLowerCase()) {
+            case "min":
+                handleMinCommand(commandParts[1]);
+                break;
+            case "max":
+                handleMaxCommand(commandParts[1]);
+                break;
+            case "average":
+                handleAverageCommand(commandParts[1]);
+                break;
+            case "median":
+                handleMedianCommand(commandParts[1]);
+                break;
+            case "tab":
+                handleTabCommand(commandParts[1]);
+                break;
+            case "letter":
+                handleLetterCommand(Integer.parseInt(commandParts[1]));
+                break;
+            case "name":
+                handleNameCommand(Integer.parseInt(commandParts[1]));
+                break;
+            case "change":
+                handleChangeCommand(Integer.parseInt(commandParts[1]), Integer.parseInt(commandParts[2]));
+                break;
+            default:
+                System.out.println("Unknown command. Please try again.");
+                break;
+        }
+    }
+
+    // Example command handler using if and else
+    private static void handleLetterCommand(int PID) {
+        Optional<Student> studentOptional = gradebook.findStudentByPID(PID);
+        if (studentOptional.isPresent()) {
+            Student student = studentOptional.get();
+            System.out.println("Letter grade for PID " + PID + ": " + student.getGrade().getLetterGrade());
+        } else {
+            System.out.println("Student with PID " + PID + " not found.");
+        }
+    }
+    // Implementations for command handlers as previously described
+    // For brevity, detailed method implementations are omitted here but should follow the logic provided in the preceding messages
+
+    private static void handleMinCommand(String type) {
+        if ("score".equals(type)) {
+            gradebook.minScore().ifPresent(min -> System.out.println("Minimum score: " + min));
+        }
+    }
+
+    private static void handleMaxCommand(String type) {
+        if ("score".equals(type)) {
+            gradebook.maxScore().ifPresent(max -> System.out.println("Maximum score: " + max));
+        }
+    }
+
+    private static void handleAverageCommand(String type) {
+        double avg = gradebook.averageScore();
+        if (!Double.isNaN(avg)) System.out.println("Average score: " + String.format("%.1f", avg));
+    }
+
+    private static void handleMedianCommand(String type) {
+        printMedianScore();
+    }
+
+    private static void handleTabCommand(String type) {
+        if ("scores".equals(type)) {
+            printTabScores();
+        } else if ("letters".equals(type)) {
+            printTabLetters();
+        }
+    }
+
+    private static void handleNameCommand(int PID) {
+        gradebook.findStudentByPID(PID).ifPresentOrElse(
+                student -> System.out.println("Name for PID " + PID + ": " + student.getFirstName() + " " + student.getLastName()),
+                () -> System.out.println("Student with PID " + PID + " not found.")
+        );
+    }
+
+    private static void handleChangeCommand(int PID, int newScore) {
+        gradebook.findStudentByPID(PID).ifPresentOrElse(
+                student -> {
+                    student.updateGrade(newScore);
+                    System.out.println("Grade changed successfully.");
+                },
+                () -> System.out.println("Student with PID " + PID + " not found.")
+        );
+    }
+
+    private static void printMedianScore() {
+        // Implement median score logic
+        List<Student> sortedStudents = gradebook.getStudentsSortedByScore();
+        if (sortedStudents.isEmpty()) {
+            System.out.println("No students available to calculate median.");
+            return;
+        }
+        int middle = sortedStudents.size() / 2;
+        if (sortedStudents.size() % 2 == 1) {
+            System.out.println("Median score: " + sortedStudents.get(middle).getGrade().getScore());
+        } else {
+            double median = (sortedStudents.get(middle - 1).getGrade().getScore() + sortedStudents.get(middle).getGrade().getScore()) / 2.0;
+            System.out.println("Median score: " + String.format("%.1f", median));
+        }
+    }
+
+    private static void printTabScores() {
+        System.out.println("First Name\tLast Name\tPID\tScore");
+        for (Student student : gradebook.getStudents()) {
+            System.out.println(student.getFirstName() + "\t" + student.getLastName() + "\t" + student.getPID() + "\t" + student.getGrade().getScore());
+        }
+    }
+
+    private static void printTabLetters() {
+        System.out.println("First Name\tLast Name\tPID\tLetter");
+        for (Student student : gradebook.getStudents()) {
+            System.out.println(student.getFirstName() + "\t" + student.getLastName() + "\t" + student.getPID() + "\t" + student.getGrade().getLetterGrade());
+        }
+    }
+}
