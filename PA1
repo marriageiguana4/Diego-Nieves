@@ -175,3 +175,196 @@ public class Main {
         }
     }
 }
+
+//GRADE CLASS
+
+public class Grade {
+    private int score;
+    private String letterGrade;
+
+    public Grade(int score) {
+        this.score = score;
+        this.letterGrade = convertScoreToLetter(score);
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public String getLetterGrade() {
+        return letterGrade;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
+        this.letterGrade = convertScoreToLetter(score);
+    }
+
+    public static String convertScoreToLetter(int score) {
+        if (score >= 90) return "A";
+        else if (score >= 80) return "B";
+        else if (score >= 70) return "C";
+        else if (score >= 60) return "D";
+        else return "F";
+    }
+}
+
+//STUDENT CLASS
+
+public class Student {
+    private String firstName;
+    private String lastName;
+    private int PID; // 7-digit ID
+    private Grade grade;
+
+    public Student(String firstName, String lastName, int PID, int score) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.PID = PID;
+        this.grade = new Grade(score);
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public int getPID() {
+        return PID;
+    }
+
+    public Grade getGrade() {
+        return grade;
+    }
+
+    public void updateGrade(int newScore) {
+        this.grade.setScore(newScore);
+    }
+
+    public void ifPresentOrElse(Object o, Object o1) {
+    }
+}
+
+
+//GRADEBOOK CLASS
+
+import java.util.*;
+
+public class Gradebook {
+    private List<Student> students;
+
+    public Gradebook() {
+        students = new ArrayList<>();
+    }
+
+    public void addStudent(Student student) {
+        students.add(student);
+    }
+
+    public Optional<Student> findStudentByPID(int PID) {
+        return students.stream().filter(student -> student.getPID() == PID).findFirst();
+    }
+
+    public OptionalInt minScore() {
+        return students.stream().mapToInt(student -> student.getGrade().getScore()).min();
+    }
+
+    public OptionalInt maxScore() {
+        return students.stream().mapToInt(student -> student.getGrade().getScore()).max();
+    }
+
+    public double averageScore() {
+        return students.stream().mapToInt(student -> student.getGrade().getScore()).average().orElse(Double.NaN);
+    }
+
+    public int calculateMinScore() {
+        return students.stream().mapToInt(s -> s.getGrade().getScore()).min().orElse(0);
+    }
+
+    public String calculateMinLetterGrade() {
+        return calculateLetterGrade(calculateMinScore());
+    }
+
+    public int calculateMaxScore() {
+        return students.stream().mapToInt(s -> s.getGrade().getScore()).max().orElse(0);
+    }
+
+    public String calculateMaxLetterGrade() {
+        return calculateLetterGrade(calculateMaxScore());
+    }
+
+    public double calculateAverageScore() {
+        return students.stream().mapToInt(s -> s.getGrade().getScore()).average().orElse(0.0);
+    }
+
+    public String calculateAverageLetterGrade() {
+        return calculateLetterGrade((int) calculateAverageScore());
+    }
+
+    public int calculateMedianScore() {
+        List<Integer> scores = students.stream().map(s -> s.getGrade().getScore()).sorted().toList();
+        int size = scores.size();
+        return (size % 2 == 0) ? (scores.get(size / 2 - 1) + scores.get(size / 2)) / 2 : scores.get(size / 2);
+    }
+
+    public String calculateMedianLetterGrade() {
+        return calculateLetterGrade(calculateMedianScore());
+    }
+
+    public String calculateLetterGradeForPID(int pid) {
+        Student student = findStudentByPID(pid);
+
+        if (student != null) {
+            int score = student.getGrade().getScore();
+            return calculateLetterGrade(score);
+        } else {
+            return "Student not found with PID: " + pid;
+        }
+    }
+
+    private String calculateLetterGrade(int score) {
+        int roundedScore = (score / 10) * 10; // Round down to the nearest 10
+        String letterGrade;
+        switch (roundedScore) {
+            case 100:
+            case 90:
+                letterGrade = "A";
+                break;
+            case 80:
+                letterGrade = "B";
+                break;
+            case 70:
+                letterGrade = "C";
+                break;
+            case 60:
+                letterGrade = "D";
+                break;
+            default:
+                letterGrade = "F";
+        }
+        return letterGrade;
+    }
+
+    public void printTableScores() {
+        System.out.println("First Name\tLast Name\tPID\tScore");
+        students.forEach(student -> System.out.println(student.getFirstName() + "\t" + student.getLastName() + "\t" + student.getPID() + "\t" + student.getGrade().getScore()));
+    }
+
+    public void printTableLetters() {
+        System.out.println("First Name\tLast Name\tPID\tLetter Grade");
+        students.forEach(student -> System.out.println(student.getFirstName() + "\t" + student.getLastName() + "\t" + student.getPID() + "\t" + student.getGrade().getLetterGrade()));
+    }
+
+    public void printWelcomeMessage() {
+        System.out.println("Welcome to my grade book!");
+        System.out.println("Please enter the information of the first student using the following format:");
+        System.out.println("\"firstName lastName PID grade\".");
+        System.out.println("Type 'DONE' when you are finished entering student information.");
+    }
+}
+
+
+
