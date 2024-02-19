@@ -86,6 +86,15 @@ public class Main {
         }
     }
 
+    private static void printSortedScores() {
+        List<Student> sortedStudents = gradebook.getStudentsSortedByScore();
+        System.out.println("Students sorted by score:");
+        sortedStudents.forEach(student -> System.out.println(student.getFirstName() + " " +
+                                                              student.getLastName() + " - Score: " +
+                                                              student.getGrade().getScore()));
+    }
+}
+
     // Example command handler using if and else
     private static void handleLetterCommand(int PID) {
         Optional<Student> studentOptional = gradebook.findStudentByPID(PID);
@@ -250,8 +259,10 @@ public class Student {
 
 
 //GRADEBOOK CLASS
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Gradebook {
     private List<Student> students;
@@ -265,9 +276,10 @@ public class Gradebook {
     }
 
     public Optional<Student> findStudentByPID(int PID) {
-        return students.stream().filter(student -> student.getPID() == PID).findFirst();
+        return students.stream()
+                       .filter(student -> student.getPID() == PID)
+                       .findFirst();
     }
-
     public OptionalInt minScore() {
         return students.stream().mapToInt(student -> student.getGrade().getScore()).min();
     }
@@ -299,6 +311,13 @@ public class Gradebook {
     public double calculateAverageScore() {
         return students.stream().mapToInt(s -> s.getGrade().getScore()).average().orElse(0.0);
     }
+
+    public List<Student> getStudentsSortedByScore() {
+        return students.stream()
+                       .sorted(Comparator.comparingInt(student -> student.getGrade().getScore()))
+                       .collect(Collectors.toList());
+    }
+
 
     public String calculateAverageLetterGrade() {
         return calculateLetterGrade((int) calculateAverageScore());
