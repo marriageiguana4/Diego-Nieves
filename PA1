@@ -1,189 +1,183 @@
-import java.util.Scanner;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Main {
-    private static final Gradebook gradebook = new Gradebook();
-    private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        gradebook.printWelcomeMessage();
-        getInput();
-        handleCommands();
-    }
 
-    private static void getInput() {
+        Scanner input = new Scanner(System.in);
+        String firstName = "", lastName = "";
+        int pantherID = 0;
+        String userInput = "";
+        ArrayList<Student> studentList = new ArrayList<>();
+
+        int parsedInt;
+        Pattern p;
+        Matcher m;
+
+        // WELCOME MESSAGE
+        System.out.print(
+                "************************************************************************************\n"
+                        + "Welcome to my grade book!\n\n"
+                        + "Please enter the information of the first student using the following format:\n"
+                        + "\"firstName lastName PID grade\".\n"
+                        + "Type \'DONE\' when you are done.\n\n"
+        );
+
+        // ADD STUDENTS UNTIL "DONE" IS INPUTTED
         while (true) {
-            System.out.print("Enter student info or 'DONE': ");
-            String input = scanner.nextLine();
-            if ("DONE".equalsIgnoreCase(input)) {
-                break;
-            }
             try {
-                processStudentInput(input);
-            } catch (Exception e) {
-                System.out.println("Invalid input. Please try again.");
+                // READ STUDENTS
+                userInput = input.nextLine();
+                if (userInput.toUpperCase().compareTo("DONE") == 0) {
+                    break;
+                }
+                String[] userInputSplit = userInput.split(" ");
+
+                // ASSIGN FIRST NAME
+                firstName = userInputSplit[0];
+                if (Character.isLowerCase(firstName.charAt(0))) {
+                    throw new Exception();
+                }
+
+                // ASSIGN LAST NAME
+                lastName = userInputSplit[1];
+                p = Pattern.compile("[a-zA-Z]+[.]?");
+                m = p.matcher(lastName);
+                if (Character.isLowerCase(lastName.charAt(0)) || !(m.matches())) {
+                    throw new Exception();
+                }
+
+                // ASSIGN PANTHER ID
+                if (userInputSplit[2].charAt(0) == '0' || userInputSplit[2].length() != 7) {
+                    throw new Exception();
+                }
+                parsedInt = Integer.parseInt(userInputSplit[2]);
+                pantherID = parsedInt;
+
+                // ASSIGN GRADE SCORE
+                parsedInt = Integer.parseInt(userInputSplit[3]);
+                if (parsedInt < 0 || parsedInt > 100) {
+                    throw new Exception();
+                }
+
+                // ADD STUDENT TO LIST
+                studentList.add(new Student(firstName, lastName, pantherID, new Grade(parsedInt)));
+
             }
-        }
-    }
-
-    private static void processStudentInput(String input) {
-        String[] parts = input.split(" ");
-        if (parts.length != 4) {
-            System.out.println("Invalid input format. Please try again.");
-            return;
-        }
-        String firstName = parts[0];
-        String lastName = parts[1];
-        int PID = Integer.parseInt(parts[2]);
-        int grade = Integer.parseInt(parts[3]);
-        Student student = new Student(firstName, lastName, PID, grade);
-        gradebook.addStudent(student);
-        System.out.println("Student added successfully.");
-    }
-
-    private static void handleCommands() {
-        System.out.println("Please enter a new command:");
-        while (true) {
-            String command = scanner.nextLine();
-            if ("QUIT".equalsIgnoreCase(command)) {
-                System.out.println("Exiting grade book application.");
-                break;
+            // CATCH ERRORS FROM USERINPUT
+            catch (Exception e) {
+                System.out.print(
+                        "\nEntered information wrong!\n"
+                                + "Correct format is:\n"
+                                + "\"firstName lastName PID grade\"\n"
+                );
             }
-            processCommand(command);
+            // PRINT OUT MENU UNTIL USER IS INPUTS "DONE"
+            System.out.print(
+                    "\n************************************************************************************\n"
+                            + "Please enter the information of the next student using the same format.\n"
+                            + "If there is no more students, please enter the keyword \"DONE\".\n"
+                            + "Press Enter when you are done.\n\n"
+            );
         }
-    }
+
+        // ADD STUDENTS TO GRADEBOOK
+        Gradebook gradebook = new Gradebook(studentList);
 
 
-    private static void processCommand(String command) {
-        String[] commandParts = command.split(" ");
-        switch (commandParts[0].toLowerCase()) {
-            case "min":
-                handleMinCommand(commandParts[1]);
-                break;
-            case "max":
-                handleMaxCommand(commandParts[1]);
-                break;
-            case "average":
-                handleAverageCommand(commandParts[1]);
-                break;
-            case "median":
-                handleMedianCommand(commandParts[1]);
-                break;
-            case "tab":
-                handleTabCommand(commandParts[1]);
-                break;
-            case "letter":
-                handleLetterCommand(Integer.parseInt(commandParts[1]));
-                break;
-            case "name":
-                handleNameCommand(Integer.parseInt(commandParts[1]));
-                break;
-            case "change":
-                handleChangeCommand(Integer.parseInt(commandParts[1]), Integer.parseInt(commandParts[2]));
-                break;
-            default:
-                System.out.println("Unknown command. Please try again.");
-                break;
-        }
+        String userChoice = "";
+
+        // ENTER A DO-WHILE LOOP FOR USER INPUT ON GRADEBOOK METHODS
+        do {
+            System.out.print(
+                    "\n************************************************************************************\n"
+                            + "\nPlease enter a new command:\n\n"
+                            + "- Type \"max score\" to retrieve the highest score\n"
+                            + "- Type \"min score\" to retrieve the lowest score\n"
+                            + "- Type \"max letter\" to retrieve the highest letter grade\n"
+                            + "- Type \"min letter\" to retrieve the lowest letter grade\n"
+                            + "- Type \"find student grade\" to retrieve the student's letter grade\n"
+                            + "- Type \"find student name\" to retrieve the student's full name\n"
+                            + "- Type \"change grade\" to find and change student's letter grade\n"
+                            + "- Type \"average score\" to retrieve the average score of all students\n"
+                            + "- Type \"average letter\" to retrieve the average letter grade of all students\n"
+                            + "- Type \"median score\" to retrieve the median score of all students\n"
+                            + "- Type \"median letter\" to retrieve the median letter grade of all students\n"
+                            + "- Type \"tab scores\" to print students with scores in a tab-separated table\n"
+                            + "- Type \"tab letter\" to print students with letter grades in a tab-separated table\n"
+                            + "- Type \"quit\" to quit the program\n\n"
+            );
+
+            // USER ENTERS THEIR CHOICE
+            System.out.print("Enter your choice: ");
+            userChoice = input.nextLine();
+
+            // EXECUTE GRADEBOOK METHOD BASED ON USERCHOICE
+            switch (userChoice) {
+                case ("max score"):
+                    gradebook.getMaxScore();
+                    break;
+                case ("min score"):
+                    gradebook.getMinScore();
+                    break;
+                case ("max letter"):
+                    gradebook.getMaxLetter();
+                    break;
+                case ("min letter"):
+                    gradebook.getMinLetter();
+                    break;
+                case ("find student grade"):
+                    System.out.println("\nPlease input the pantherID of the student\n");
+                    userInput = input.nextLine();
+                    gradebook.findStudentLetterGrade(Integer.parseInt(userInput));
+                    break;
+                case ("find student name"):
+                    System.out.println("\nPlease input the pantherID of the student\n");
+                    userInput = input.nextLine();
+                    gradebook.findStudentName(Integer.parseInt(userInput));
+                    break;
+                case ("change grade"):
+                    System.out.println("\nPlease input the pantherID and grade you wish to change to in the format \"pantherID (0-100)\"\n");
+                    userInput = input.nextLine();
+                    gradebook.changeGrade(Integer.parseInt(userInput.split(" ")[0]), Integer.parseInt(userInput.split(" ")[1]));
+                    break;
+                case ("average score"):
+                    gradebook.getAvgScore();
+                    break;
+                case ("average letter"):
+                    gradebook.getAvgLetter();
+                    break;
+                case ("median score"):
+                    gradebook.getMedianScore();
+                    break;
+                case ("median letter"):
+                    gradebook.getMedianLetter();
+                    break;
+                case ("tab scores"):
+                    gradebook.printAllStudentsScores();
+                    System.out.println();
+                    break;
+                case ("tab letter"):
+                    gradebook.printAllStudentsLetterGrade();
+                    System.out.println();
+                    break;
+                case ("quit"):
+                    System.out.println("\nClosing Gradebook...\n");
+                    break;
+                default:
+                    System.out.print("\nTyped in wrong command, please try again!\n");
+                    break;
+            }
+        } while (!userChoice.equals("quit"));
+
+        input.close();
     }
 
-    private static void printSortedScores() {
-        List<Student> sortedStudents = gradebook.getStudentsSortedByScore();
-        System.out.println("Students sorted by score:");
-        sortedStudents.forEach(student -> System.out.println(student.getFirstName() + " " +
-                                                              student.getLastName() + " - Score: " +
-                                                              student.getGrade().getScore()));
-    }
 }
 
-    // Example command handler using if and else
-    private static void handleLetterCommand(int PID) {
-        Optional<Student> studentOptional = gradebook.findStudentByPID(PID);
-        if (studentOptional.isPresent()) {
-            Student student = studentOptional.get();
-            System.out.println("Letter grade for PID " + PID + ": " + student.getGrade().getLetterGrade());
-        } else {
-            System.out.println("Student with PID " + PID + " not found.");
-        }
-    }
-    // Implementations for command handlers as previously described
-    // For brevity, detailed method implementations are omitted here but should follow the logic provided in the preceding messages
 
-    private static void handleMinCommand(String type) {
-        if ("score".equals(type)) {
-            gradebook.minScore().ifPresent(min -> System.out.println("Minimum score: " + min));
-        }
-    }
-
-    private static void handleMaxCommand(String type) {
-        if ("score".equals(type)) {
-            gradebook.maxScore().ifPresent(max -> System.out.println("Maximum score: " + max));
-        }
-    }
-
-    private static void handleAverageCommand(String type) {
-        double avg = gradebook.averageScore();
-        if (!Double.isNaN(avg)) System.out.println("Average score: " + String.format("%.1f", avg));
-    }
-
-    private static void handleMedianCommand(String type) {
-        printMedianScore();
-    }
-
-    private static void handleTabCommand(String type) {
-        if ("scores".equals(type)) {
-            printTabScores();
-        } else if ("letters".equals(type)) {
-            printTabLetters();
-        }
-    }
-
-    private static void handleNameCommand(int PID) {
-        gradebook.findStudentByPID(PID).ifPresentOrElse(
-                student -> System.out.println("Name for PID " + PID + ": " + student.getFirstName() + " " + student.getLastName()),
-                () -> System.out.println("Student with PID " + PID + " not found.")
-        );
-    }
-
-    private static void handleChangeCommand(int PID, int newScore) {
-        gradebook.findStudentByPID(PID).ifPresentOrElse(
-                student -> {
-                    student.updateGrade(newScore);
-                    System.out.println("Grade changed successfully.");
-                },
-                () -> System.out.println("Student with PID " + PID + " not found.")
-        );
-    }
-
-    private static void printMedianScore() {
-        // Implement median score logic
-        List<Student> sortedStudents = gradebook.getStudentsSortedByScore();
-        if (sortedStudents.isEmpty()) {
-            System.out.println("No students available to calculate median.");
-            return;
-        }
-        int middle = sortedStudents.size() / 2;
-        if (sortedStudents.size() % 2 == 1) {
-            System.out.println("Median score: " + sortedStudents.get(middle).getGrade().getScore());
-        } else {
-            double median = (sortedStudents.get(middle - 1).getGrade().getScore() + sortedStudents.get(middle).getGrade().getScore()) / 2.0;
-            System.out.println("Median score: " + String.format("%.1f", median));
-        }
-    }
-
-    private static void printTabScores() {
-        System.out.println("First Name\tLast Name\tPID\tScore");
-        for (Student student : gradebook.getStudents()) {
-            System.out.println(student.getFirstName() + "\t" + student.getLastName() + "\t" + student.getPID() + "\t" + student.getGrade().getScore());
-        }
-    }
-
-    private static void printTabLetters() {
-        System.out.println("First Name\tLast Name\tPID\tLetter");
-        for (Student student : gradebook.getStudents()) {
-            System.out.println(student.getFirstName() + "\t" + student.getLastName() + "\t" + student.getPID() + "\t" + student.getGrade().getLetterGrade());
-        }
-    }
-}
 
 //GRADE CLASS
 
@@ -191,10 +185,13 @@ public class Grade {
     private int score;
     private String letterGrade;
 
-    public Grade(int score) {
+    // CONSTRUCTOR
+    public Grade (int score) {
         this.score = score;
-        this.letterGrade = convertScoreToLetter(score);
+        calculateLetterGrade(score);
     }
+
+    // SETTERS AND GETTERS BELOW
 
     public int getScore() {
         return score;
@@ -206,32 +203,56 @@ public class Grade {
 
     public void setScore(int score) {
         this.score = score;
-        this.letterGrade = convertScoreToLetter(score);
+        calculateLetterGrade(score);
     }
 
-    public static String convertScoreToLetter(int score) {
-        if (score >= 90) return "A";
-        else if (score >= 80) return "B";
-        else if (score >= 70) return "C";
-        else if (score >= 60) return "D";
-        else return "F";
+    public void setLetterGrade(String letterGrade) {
+        this.letterGrade = letterGrade;
+    }
+
+    // CALCULATE LETTER GRADE BASED ON INITIAL SCORE INPUTTED BY USER
+    private void calculateLetterGrade(int score) {
+        if (score >= 90) {
+            this.letterGrade = "A";
+        } else if (score >= 85 && score <= 89) {
+            this.letterGrade = "A-";
+        } else if (score >= 80 && score <= 84) {
+            this.letterGrade = "B+";
+        } else if (score >= 75 && score <= 79) {
+            this.letterGrade = "B";
+        } else if (score >= 70 && score <= 74) {
+            this.letterGrade = "B-";
+        } else if (score >= 65 && score <= 69) {
+            this.letterGrade = "C+";
+        } else if (score >= 60 && score <= 64) {
+            this.letterGrade = "C";
+        } else if (score >= 50 && score <= 59) {
+            this.letterGrade = "D";
+        } else {
+            this.letterGrade = "F";
+        }
     }
 }
+
+
 
 //STUDENT CLASS
 
 public class Student {
     private String firstName;
     private String lastName;
-    private int PID; // 7-digit ID
+    private int pid;
     private Grade grade;
 
-    public Student(String firstName, String lastName, int PID, int score) {
+    // CONSTRUCTOR
+    public Student(String firstName, String lastName, int pid, Grade grade) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.PID = PID;
-        this.grade = new Grade(score);
+        this.pid = pid;
+        this.grade = grade;
     }
+
+    // SETTERS AND GETTERS BELOW
 
     public String getFirstName() {
         return firstName;
@@ -241,149 +262,213 @@ public class Student {
         return lastName;
     }
 
-    public int getPID() {
-        return PID;
+    public int getPid() {
+        return pid;
     }
 
     public Grade getGrade() {
         return grade;
     }
 
-    public void updateGrade(int newScore) {
-        this.grade.setScore(newScore);
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public void ifPresentOrElse(Object o, Object o1) {
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setPid(int pid) {
+        this.pid = pid;
+    }
+
+    public void setGrade(Grade grade) {
+        this.grade = grade;
     }
 }
 
 
 //GRADEBOOK CLASS
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Gradebook {
-    private List<Student> students;
 
-    public Gradebook() {
-        students = new ArrayList<>();
+    // CLASS ARRAYLIST TO STORE ALL STUDENTS
+    private ArrayList<Student> listOfStudents = new ArrayList<>();
+
+    // CONSTRUCTOR
+    public Gradebook(ArrayList<Student> studentList) {
+        this.listOfStudents = studentList;
     }
 
-    public void addStudent(Student student) {
-        students.add(student);
+    // PRINT OUT MAX SCORE OF ALL STUDENTS
+    public void getMaxScore() {
+        ArrayList<Integer> scores = new ArrayList<>();
+
+        listOfStudents.stream().forEach(s -> scores.add(s.getGrade().getScore()));
+
+        Collections.sort(scores);
+        System.out.println("\nMAX SCORE: " + scores.get(scores.size() - 1));
     }
 
-    public Optional<Student> findStudentByPID(int PID) {
-        return students.stream()
-                       .filter(student -> student.getPID() == PID)
-                       .findFirst();
-    }
-    public OptionalInt minScore() {
-        return students.stream().mapToInt(student -> student.getGrade().getScore()).min();
-    }
-
-    public OptionalInt maxScore() {
-        return students.stream().mapToInt(student -> student.getGrade().getScore()).max();
+    // PRINT MIN SCORE OF ALL STUDENTS
+    public void getMinScore() {
+        ArrayList<Integer> scores = new ArrayList<>();
+        for (Student s : this.listOfStudents) {
+            scores.add(s.getGrade().getScore());
+        }
+        Collections.sort(scores);
+        System.out.println("\nMIN SCORE: " + scores.get(0));
     }
 
-    public double averageScore() {
-        return students.stream().mapToInt(student -> student.getGrade().getScore()).average().orElse(Double.NaN);
+    // PRINT MAX LETTER GRADE OF ALL STUDENTS
+    public void getMaxLetter() {
+        ArrayList<String> gradeLetters = new ArrayList<>();
+        for (Student s : this.listOfStudents) {
+            gradeLetters.add(s.getGrade().getLetterGrade());
+        }
+
+		/*
+		MAP AND CONCAT AN "," TO LETTER GRADES WITH NO + OR - SINCE "," IS IN BETWEEN THEM IN ASCII TABLE, ALLOWING FOR ACCURATE SORTING OF GRADES.
+		ARRAYLIST IS THEN SORTED AND MAPPED TO REPLACE THE "," IN THE LETTERS. A LIST IS RETURNED AND THE VALUE AT INDEX 0 IS THE HIGHEST GRADE.
+		*/
+        List<String> newArr = gradeLetters.stream()
+                .map(i -> {
+                    return !i.contains("+") && !i.contains("-") ? i + "," : i;
+                })
+                .sorted()
+                .map(i -> i.replace(",", ""))
+                .collect(Collectors.toList());
+
+        System.out.println("\nMAX LETTER GRADE: " + newArr.get(0));
     }
 
-    public int calculateMinScore() {
-        return students.stream().mapToInt(s -> s.getGrade().getScore()).min().orElse(0);
+    // PRINT MIN LETTER GRADE OF ALL STUDENTS
+    public void getMinLetter() {
+        ArrayList<String> gradeLetters = new ArrayList<>();
+
+        for (Student s : this.listOfStudents) {
+            gradeLetters.add(s.getGrade().getLetterGrade());
+        }
+
+		/*
+		MAP AND CONCAT AN "," TO LETTER GRADES WITH NO + OR - SINCE "," IS IN BETWEEN THEM IN ASCII TABLE, ALLOWING FOR ACCURATE SORTING OF GRADES.
+		ARRAYLIST IS THEN SORTED AND MAPPED TO REPLACE THE "," IN THE LETTERS. A LIST IS RETURNED AND THE VALUE AT THE END IS THE LOWEST GRADE.
+		*/
+        List<String> newArr = gradeLetters.stream()
+                .map(i -> {
+                    return !i.contains("+") && !i.contains("-") ? i + "," : i;
+                })
+                .sorted()
+                .map(i -> i.replace(",", ""))
+                .collect(Collectors.toList());
+
+        System.out.println("\nMIN LETTER GRADE: " + newArr.get(newArr.size() - 1));
     }
 
-    public String calculateMinLetterGrade() {
-        return calculateLetterGrade(calculateMinScore());
+    // FIND AND PRINT LETTER GRADE OF STUDENT THROUGH PANTHERID
+    public void findStudentLetterGrade(int PID) {
+        this.listOfStudents.stream()
+                .filter(s -> s.getPid() == PID)
+                .forEach(s -> System.out.println("\nSTUDENT LETTER GRADE: " + s.getGrade().getLetterGrade()));
     }
 
-    public int calculateMaxScore() {
-        return students.stream().mapToInt(s -> s.getGrade().getScore()).max().orElse(0);
+    // FIND AND PRINT FULL NAME OF STUDENT THROUGH PANTHERID
+    public void findStudentName(int PID) {
+        this.listOfStudents.stream()
+                .filter(s -> s.getPid() == PID)
+                .forEach(s -> System.out.println("\nSTUDENT NAME: " + s.getFirstName() + " " + s.getLastName()));
     }
 
-    public String calculateMaxLetterGrade() {
-        return calculateLetterGrade(calculateMaxScore());
+    // CHANGE THE GRADE OF AN EXISTING STUDENT
+    public void changeGrade(int PID, int newScore) {
+        this.listOfStudents.stream()
+                .filter(s -> s.getPid() == PID)
+                .forEach(s -> s.getGrade().setScore(newScore));
     }
 
-    public double calculateAverageScore() {
-        return students.stream().mapToInt(s -> s.getGrade().getScore()).average().orElse(0.0);
+    // PRINT THE AVERAGE SCORE OF ALL STUDENT GRADES
+    public void getAvgScore() {
+        double sum = 0;
+        for(Student s: listOfStudents)
+            sum += s.getGrade().getScore();
+        System.out.printf("\nAVERAGE SCORE: %.2f\n", sum / listOfStudents.size());
     }
 
-    public List<Student> getStudentsSortedByScore() {
-        return students.stream()
-                       .sorted(Comparator.comparingInt(student -> student.getGrade().getScore()))
-                       .collect(Collectors.toList());
+    // PRINT THE AVERAGE LETTER SCORE OF ALL STUDENT GRADES
+    public void getAvgLetter() {
+        List<Integer> scores = this.listOfStudents.stream()
+                .map(s -> s.getGrade().getScore())
+                .collect(Collectors.toList());
+        double avgScore = scores.stream().mapToInt(Integer::intValue).sum() / this.listOfStudents.size();
+
+        System.out.println("\nAVERAGE LETTER GRADE: " + calculateLetter(avgScore));
     }
 
-
-    public String calculateAverageLetterGrade() {
-        return calculateLetterGrade((int) calculateAverageScore());
+    // PRINT THE MEDIAN SCORE OF ALL STUDENT GRADES
+    public void getMedianScore() {
+        int i = 0, n = listOfStudents.size();
+        int[] scores = new int[n];
+        for(Student s: listOfStudents)
+            scores[i++] = s.getGrade().getScore();
+        Arrays.sort(scores);
+        if (n % 2 == 0)
+            System.out.printf("\nMEDIAN SCORE: %.2f\n", (scores[n / 2] + scores[n / 2 - 1]) / 2.0);
+        else
+            System.out.printf("\nMEDIAN SCORE: %.2f\n", scores[n / 2]);
     }
 
-    public int calculateMedianScore() {
-        List<Integer> scores = students.stream().map(s -> s.getGrade().getScore()).sorted().toList();
-        int size = scores.size();
-        return (size % 2 == 0) ? (scores.get(size / 2 - 1) + scores.get(size / 2)) / 2 : scores.get(size / 2);
+    // PRINT THE MEDIAN LETTER GRADE OF ALL STUDENT GRADES
+    public void getMedianLetter() {
+        int i = 0, n = listOfStudents.size();
+        int[] scores = new int[n];
+        double medianScores;
+
+        for(Student s: listOfStudents)
+            scores[i++] = s.getGrade().getScore();
+        Arrays.sort(scores);
+        if (n % 2 == 0)
+            medianScores = (scores[n / 2] + scores[n / 2 - 1]) / 2.0;
+        else
+            medianScores = scores[n / 2];
+
+        System.out.println("\nMEDIAN LETTER GRADE: " + calculateLetter(medianScores));
     }
 
-    public String calculateMedianLetterGrade() {
-        return calculateLetterGrade(calculateMedianScore());
+    // PRINT ALL STUDENTS WITH RESPECTIVE GRADE SCORES IN TAB-SPACED GRAPH
+    public void printAllStudentsScores() {
+        this.listOfStudents.stream()
+                .forEach(s -> System.out.printf("\n%s\t%s\t%d\t%d", s.getFirstName(), s.getLastName(), s.getPid(), s.getGrade().getScore()));
     }
 
-    public String calculateLetterGradeForPID(int pid) {
-        Student student = findStudentByPID(pid);
+    // PRINT ALL STUDENTS WITH RESPECTIVE LETTER GRADES IN TAB-SPACED GRAPH
+    public void printAllStudentsLetterGrade() {
+        this.listOfStudents.stream()
+                .forEach(s -> System.out.printf("\n%s\t%s\t%d\t%s", s.getFirstName(), s.getLastName(), s.getPid(), s.getGrade().getLetterGrade()));
+    }
 
-        if (student != null) {
-            int score = student.getGrade().getScore();
-            return calculateLetterGrade(score);
+    // METHOD TO CALCULATE LETTER GRADE WITH GRADE SCORE PASSED AS A PARAMETER - USED BY GETAVERAGELETTER() AND GETMEDIANLETTER()
+    private String calculateLetter(double num) {
+
+        if (num >= 90) {
+            return "A";
+        } else if (num >= 85 && num <= 89) {
+            return "A-";
+        } else if (num >= 80 && num <= 84) {
+            return "B+";
+        } else if (num >= 75 && num <= 79) {
+            return "B";
+        } else if (num >= 70 && num <= 74) {
+            return "B-";
+        } else if (num >= 65 && num <= 69) {
+            return "C+";
+        } else if (num >= 60 && num <= 64) {
+            return "C";
+        } else if (num >= 50 && num <= 59) {
+            return "D";
         } else {
-            return "Student not found with PID: " + pid;
+            return "F";
         }
-    }
-
-    private String calculateLetterGrade(int score) {
-        int roundedScore = (score / 10) * 10; // Round down to the nearest 10
-        String letterGrade;
-        switch (roundedScore) {
-            case 100:
-            case 90:
-                letterGrade = "A";
-                break;
-            case 80:
-                letterGrade = "B";
-                break;
-            case 70:
-                letterGrade = "C";
-                break;
-            case 60:
-                letterGrade = "D";
-                break;
-            default:
-                letterGrade = "F";
-        }
-        return letterGrade;
-    }
-
-    public void printTableScores() {
-        System.out.println("First Name\tLast Name\tPID\tScore");
-        students.forEach(student -> System.out.println(student.getFirstName() + "\t" + student.getLastName() + "\t" + student.getPID() + "\t" + student.getGrade().getScore()));
-    }
-
-    public void printTableLetters() {
-        System.out.println("First Name\tLast Name\tPID\tLetter Grade");
-        students.forEach(student -> System.out.println(student.getFirstName() + "\t" + student.getLastName() + "\t" + student.getPID() + "\t" + student.getGrade().getLetterGrade()));
-    }
-
-    public void printWelcomeMessage() {
-        System.out.println("Welcome to my grade book!");
-        System.out.println("Please enter the information of the first student using the following format:");
-        System.out.println("\"firstName lastName PID grade\".");
-        System.out.println("Type 'DONE' when you are finished entering student information.");
     }
 }
-
-
-
